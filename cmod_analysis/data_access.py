@@ -1556,7 +1556,7 @@ def get_CMOD_var_list(var_list, shot, tmin=None, tmax=None, data_dict=None, eq='
         #data_dict[shot]['spectroscopy'] = spectroscopy
         #data_dict[shot]['edge'] = edge
 
-   for var in var_list:
+    for var in var_list:
         data[var] = {}
         if var=='Bt':
             #data_dict[shot][var] = magnetics.getNode('\\magnetics::Bt')
@@ -1689,11 +1689,11 @@ def get_CMOD_var_list(var_list, shot, tmin=None, tmax=None, data_dict=None, eq='
             #node_l = analysis.getNode('\\efit_aeqdsk:rco2v')
             if eq != 'analysis':
                 try:
-                    node_l = cmod_tree.getNode('\\cmod::top.mhd.efit_runs.' + f'{eq.lower()}' + '.results.a_eqdsk:rco2v')
+                    node_l = cmod_tree.getNode(r'\cmod::top.mhd.efit_runs.' + f'{eq.lower()}' + '.results.a_eqdsk:rco2v')
                 except:
-                    node_l = cmod_tree.getNode('\\cmod::top.mhd.analysis.efit.results.a_eqdsk:rco2v')
+                    node_l = cmod_tree.getNode(r'\cmod::top.mhd.analysis.efit.results.a_eqdsk:rco2v')
             else:
-                node_l = cmod_tree.getNode('\\cmod::top.mhd.analysis.efit.results.a_eqdsk:rco2v')
+                node_l = cmod_tree.getNode(r'\cmod::top.mhd.analysis.efit.results.a_eqdsk:rco2v')
 
             try:
                 l04_m = node_l.data()[:,3] / 1.0e2 # 4th channel, convert cm to m
@@ -1721,7 +1721,7 @@ def get_CMOD_var_list(var_list, shot, tmin=None, tmax=None, data_dict=None, eq='
     return data, data_dict
 
 def get_P_ohmic(shot, eq='analysis'):
-    ''' Get Ohmic power
+    r''' Get Ohmic power
 
     Translated/adapted from scopes:
     _vsurf =  deriv(smooth1d(\ANALYSIS::EFIT_SSIBRY,2))*$2pi ;
@@ -1739,17 +1739,17 @@ def get_P_ohmic(shot, eq='analysis'):
     #ssibry_node = analysis.getNode('\\analysis::efit_ssibry')
     if eq != 'analysis':
         try:
-            ssibry_node = cmod_tree.getNode('\\cmod::top.mhd.efit_runs.' + f'{eq.lower()}' + '.results.a_eqdsk:sibdry')
-            ip_node = cmod_tree.getNode('\\cmod::top.mhd.efit_runs.' + f'{eq.lower()}' + 'results.a_eqdsk:cpasma')
-            li_node = cmod_tree.getNode('\\cmod::top.mhd.efit_runs.' + f'{eq.lower()}' + 'results.a_eqdsk:ali')
+            ssibry_node = cmod_tree.getNode(r'\cmod::top.mhd.efit_runs.' + f'{eq.lower()}' + '.results.a_eqdsk:sibdry')
+            ip_node = cmod_tree.getNode(r'\cmod::top.mhd.efit_runs.' + f'{eq.lower()}' + 'results.a_eqdsk:cpasma')
+            li_node = cmod_tree.getNode(r'\cmod::top.mhd.efit_runs.' + f'{eq.lower()}' + 'results.a_eqdsk:ali')
         except:
-            ssibry_node = cmod_tree.getNode('\\cmod::top.mhd.analysis.efit.results.a_eqdsk:sibdry')
-            ip_node = cmod_tree.getNode('\\cmod::top.mhd.analysis.efit.results.a_eqdsk:cpasma')
-            li_node = cmod_tree.getNode('\\cmod::top.mhd.analysis.efit.results.a_eqdsk:ali')
+            ssibry_node = cmod_tree.getNode(r'\cmod::top.mhd.analysis.efit.results.a_eqdsk:sibdry')
+            ip_node = cmod_tree.getNode(r'\cmod::top.mhd.analysis.efit.results.a_eqdsk:cpasma')
+            li_node = cmod_tree.getNode(r'\cmod::top.mhd.analysis.efit.results.a_eqdsk:ali')
     else:
-        ssibry_node = cmod_tree.getNode('\\cmod::top.mhd.analysis.efit.results.a_eqdsk:sibdry')
-        ip_node = cmod_tree.getNode('\\cmod::top.mhd.analysis.efit.results.a_eqdsk:cpasma')
-        li_node = cmod_tree.getNode('\\cmod::top.mhd.analysis.efit.results.a_eqdsk:ali')
+        ssibry_node = cmod_tree.getNode(r'\cmod::top.mhd.analysis.efit.results.a_eqdsk:sibdry')
+        ip_node = cmod_tree.getNode(r'\cmod::top.mhd.analysis.efit.results.a_eqdsk:cpasma')
+        li_node = cmod_tree.getNode(r'\cmod::top.mhd.analysis.efit.results.a_eqdsk:ali')
 
     time = ssibry_node.dim_of(0).data()
     ssibry = ssibry_node.data()
@@ -1758,11 +1758,11 @@ def get_P_ohmic(shot, eq='analysis'):
     vsurf = np.gradient(smooth(ssibry,5),time) * 2 * np.pi
 
     # calculated plasma current
-    ip_node = analysis.getNode('\\analysis::efit_aeqdsk:cpasma')
+    #ip_node = analysis.getNode('\\analysis::efit_aeqdsk:cpasma')
     ip = np.abs(ip_node.data())
 
     # internal inductance
-    li = analysis.getNode('\\analysis::efit_aeqdsk:ali').data()
+    li = li_node.data()
 
     R_cm = 67.0 # value chosen/fixed in scopes
     L = li*2.*np.pi*R_cm*1e-9  # total inductance (nH)
@@ -1770,7 +1770,7 @@ def get_P_ohmic(shot, eq='analysis'):
     #vi = L * np.gradient(smooth(ip,2),time)   # induced voltage
     vi = L * np.gradient(smooth(ip,2),time) + 0.5*ip*np.gradient(smooth(L,2),time)  # induced voltage - 2nd term added from /home/jwhughes/idl/get_confinement.pro    
 
-    P_oh = ip * (vsurf - vi)/1e6 # P=IV   #MW
+    P_oh = ip * (vsurf - vi) / 1.0e6 # P=IV   #MW
     return time, P_oh
 
 
@@ -1794,11 +1794,11 @@ def get_dWdt(shot, tmin=None, tmax=None, plot=False, eq='analysis'):
     cmod_tree = MDSplus.Tree('cmod', shot)
     if eq != 'analysis':
         try:
-            node = cmod_tree.getNode('\\cmod::top.mhd.efit_runs.' + f'{eq.lower()}' + '.results.a_eqdsk:wplasm')
+            node = cmod_tree.getNode(r'\cmod::top.mhd.efit_runs.' + f'{eq.lower()}' + '.results.a_eqdsk:wplasm')
         except:
-            node = cmod_tree.getNode('\\cmod::top.mhd.analysis.efit.results.a_eqdsk:wplasm')
+            node = cmod_tree.getNode(r'\cmod::top.mhd.analysis.efit.results.a_eqdsk:wplasm')
     else:
-        node = cmod_tree.getNode('\\cmod::top.mhd.analysis.efit.results.a_eqdsk:wplasm')
+        node = cmod_tree.getNode(r'\cmod::top.mhd.analysis.efit.results.a_eqdsk:wplasm')
 
     #analysis = MDSplus.Tree('analysis', shot)
     #node = analysis.getNode('\\efit_aeqdsk:wplasm')
@@ -4954,6 +4954,7 @@ class EFITTree(Equilibrium):
         self._RLCFS = None                                                   #R-positions of LCFS (t,n)
         self._ZLCFS = None                                                   #Z-positions of LCFS (t,n)
         self._RCentr = None                                                  #Radius for BCentr calculation (for gfiles) (t)
+        self._ZCentr = None
         
         #machine geometry parameters
         self._nLimiter = None
@@ -5325,7 +5326,7 @@ class EFITTree(Equilibrium):
         return self._IpCalc.copy()
 
     def getF(self):
-        """returns F=RB_{\Phi}(\Psi), often calculated for grad-shafranov 
+        r"""returns F=RB_{\Phi}(\Psi), often calculated for grad-shafranov 
         solutions.
         
         Note that this method preserves whatever sign convention is used in the
