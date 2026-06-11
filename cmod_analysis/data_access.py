@@ -875,18 +875,26 @@ def neETS(shot, abscissa='RZ', t_min=None, t_max=None, electrons=None,
                                X_labels=['$t$', '$R$', '$Z$'],
                                y_label=r'$n_e$, ETS')
 
-    if electrons is None:
-        electrons = MDSplus.Tree('electrons', shot)
+    #if electrons is None:
+    #    electrons = MDSplus.Tree('electrons', shot)
+    cmod_tree = MDSplus.Tree('cmod', shot)
 
-    N_ne_ETS = electrons.getNode(r'yag_edgets.results:ne')
+    #N_ne_ETS = electrons.getNode(r'yag_edgets.results:ne')
+    N_ne_ETS = cmod_tree.getNode(r'\cmod::top.electrons.yag_edgets.results:ne')
+    e_ne_ETS = cmod_tree.getNode(r'\cmod::top.electrons.yag_edgets.results:ne:error')
+    z_ne_ETS = cmod_tree.getNode(r'\cmod::top.electrons.yag_edgets.data:fiber_z')
+    r_ne_ETS = cmod_tree.getNode(r'\cmod::top.electrons.yag.results.param:r')
 
     t_ne_ETS = N_ne_ETS.dim_of().data()
-    ne_ETS = N_ne_ETS.data() / 1e20
-    dev_ne_ETS = electrons.getNode(r'yag_edgets.results:ne:error').data() / 1e20
+    ne_ETS = N_ne_ETS.data() / 1.0e20
+    dev_ne_ETS = e_ne_ETS.data() / 1.0e20
+    #dev_ne_ETS = electrons.getNode(r'yag_edgets.results:ne:error').data() / 1e20
 
-    Z_ETS = electrons.getNode(r'yag_edgets.data:fiber_z').data() + Z_shift
-    R_ETS = (electrons.getNode(r'yag.results.param:R').data() *
-             np.ones_like(Z_ETS))
+    #Z_ETS = electrons.getNode(r'yag_edgets.data:fiber_z').data() + Z_shift
+    #R_ETS = (electrons.getNode(r'yag.results.param:R').data() *
+    #         np.ones_like(Z_ETS))
+    Z_ETS = z_ne_ETS.data() + Z_shift
+    R_ETS = (r_ne_ETS.data() * np.ones_like(Z_ETS))
     channels = list(range(0, len(Z_ETS)))
 
     t_grid, Z_grid = np.meshgrid(t_ne_ETS, Z_ETS)
@@ -960,44 +968,55 @@ def neCTS(shot, abscissa='RZ', t_min=None, t_max=None, electrons=None,
                                X_labels=['$t$', '$R$', '$Z$'],
                                y_label=r'$n_e$, CTS')
 
-    if electrons is None:
-        electrons = MDSplus.Tree('electrons', shot)
+    cmod_tree = MDSplus.Tree('cmod', shot)
+
+    #if electrons is None:
+    #    electrons = MDSplus.Tree('electrons', shot)
 
     try:
-        N_ne_TS = electrons.getNode(r'\electrons::top.yag_new.results.profiles:ne_rz')
+        #N_ne_TS = electrons.getNode(r'\electrons::top.yag_new.results.profiles:ne_rz')
+        N_ne_TS = cmod_tree.getNode(r'\cmod::top.electrons.yag_new.results.profiles:ne_rz')
         if (shot > 1030000000) & (shot < 1040000000):
-            N_ne_TS_old = electrons.getNode(r'\electrons::top.yag.results.global.profile:ne_rz_t')
+            #N_ne_TS_old = electrons.getNode(r'\electrons::top.yag.results.global.profile:ne_rz_t')
+            N_ne_TS_old = cmod_tree.getNode(r'\cmod::top.electrons.yag.results.global.profile:ne_rz_t')
     except:
-        N_ne_TS = electrons.getNode(r'\electrons::top.yag.results.global.profile:ne_rz_t')
+        #N_ne_TS = electrons.getNode(r'\electrons::top.yag.results.global.profile:ne_rz_t')
+        N_ne_TS = cmod_tree.getNode(r'\cmod::top.electrons.yag.results.global.profile:ne_rz_t')
 
     t_ne_TS = N_ne_TS.dim_of().data() # only need to get timebase for one of them
     if (shot > 1030000000) & (shot < 1040000000):
-        ne_TS = np.concatenate((N_ne_TS.data() / 1e20, N_ne_TS_old.data() / 1e20))
+        ne_TS = np.concatenate((N_ne_TS.data() / 1.0e20, N_ne_TS_old.data() / 1.0e20))
     else:
-        ne_TS = N_ne_TS.data() / 1e20
+        ne_TS = N_ne_TS.data() / 1.0e20
 
     try:
-        N_dev_ne_TS = electrons.getNode(r'yag_new.results.profiles:ne_err')
+        #N_dev_ne_TS = electrons.getNode(r'yag_new.results.profiles:ne_err')
+        N_dev_ne_TS = cmod_tree.getNode(r'\cmod::top.electrons.yag_new.results.profiles:ne_err')
         if (shot > 1030000000) & (shot < 1040000000):
-            N_dev_ne_TS_old = electrons.getNode(r'yag.results.global.profile:ne_err_zt')
+            #N_dev_ne_TS_old = electrons.getNode(r'yag.results.global.profile:ne_err_zt')
+            N_dev_ne_TS_old = cmod_tree.getNode(r'\cmod::top.electrons.yag.results.global.profile:ne_err_zt')
     except:
-        N_dev_ne_TS = electrons.getNode(r'yag.results.global.profile:ne_err_zt')
+        N_dev_ne_TS = cmod_tree.getNode(r'\cmod::top.electrons.yag.results.global.profile:ne_err_zt')
 
     try:
-        N_Z_CTS = electrons.getNode(r'yag_new.results.profiles:z_sorted')
+        #N_Z_CTS = electrons.getNode(r'yag_new.results.profiles:z_sorted')
+        N_Z_CTS = cmod_tree.getNode(r'\cmod::top.electrons.yag_new.results.profiles:z_sorted')
         if (shot > 1030000000) & (shot < 1040000000):
-            N_Z_CTS_old = electrons.getNode(r'yag.results.global.profile.z_sorted')
+            #N_Z_CTS_old = electrons.getNode(r'yag.results.global.profile.z_sorted')
+            N_Z_CTS_old = cmod_tree.getNode(r'\cmod::top.electrons.yag.results.global.profile.z_sorted')
     except:
-        N_Z_CTS = electrons.getNode(r'yag.results.global.profile.z_sorted')
+        #N_Z_CTS = electrons.getNode(r'yag.results.global.profile.z_sorted')
+        N_Z_CTS = cmod_tree.getNode(r'\cmod::top.electrons.yag.results.global.profile.z_sorted')
 
     if (shot > 1030000000) & (shot < 1040000000):
-        dev_ne_TS = np.concatenate((N_dev_ne_TS.data() / 1e20, N_dev_ne_TS_old.data() / 1e20))
+        dev_ne_TS = np.concatenate((N_dev_ne_TS.data() / 1.0e20, N_dev_ne_TS_old.data() / 1.0e20))
         Z_CTS = np.concatenate((N_Z_CTS.data() + Z_shift, N_Z_CTS_old.data() + Z_shift))
     else:
-        dev_ne_TS = N_dev_ne_TS.data() / 1e20
+        dev_ne_TS = N_dev_ne_TS.data() / 1.0e20
         Z_CTS = N_Z_CTS.data() + Z_shift
 
-    R_CTS = (electrons.getNode(r'yag.results.param:r').data() * np.ones_like(Z_CTS))
+    r_CTS = cmod_tree.getNode(r'\cmod::top.electrons.yag.results.param:r')
+    R_CTS = (r_CTS.data() * np.ones_like(Z_CTS))
     channels = list(range(0, len(Z_CTS)))
     
     t_grid, Z_grid = np.meshgrid(t_ne_TS, Z_CTS)
@@ -1133,18 +1152,27 @@ def TeETS(shot, abscissa='RZ', t_min=None, t_max=None, electrons=None,
                                X_labels=['$t$', '$R$', '$Z$'],
                                y_label=r'$T_e$, ETS')
 
-    if electrons is None:
-        electrons = MDSplus.Tree('electrons', shot)
+    cmod_tree = MDSplus.Tree('cmod', shot)
 
-    N_Te_TS = electrons.getNode(r'yag_edgets.results:te')
+    #if electrons is None:
+    #    electrons = MDSplus.Tree('electrons', shot)
+
+    #N_Te_TS = electrons.getNode(r'yag_edgets.results:te')
+    N_Te_TS = cmod_tree.getNode(r'\cmod::top.electrons.yag_edgets.results:te')
+    e_Te_TS = cmod_tree.getNode(r'\cmod::top.electrons.yag_edgets.results:te:error')
+    z_Te_TS = cmod_tree.getNode(r'\cmod::top.electrons.yag_edgets.data:fiber_z')
+    r_Te_TS = cmod_tree.getNode(r'\cmod::top.electrons.yag.results.param:r')
 
     t_Te_TS = N_Te_TS.dim_of().data()
-    Te_TS = N_Te_TS.data() / 1e3
-    dev_Te_TS = electrons.getNode(r'yag_edgets.results:te:error').data() / 1e3
-    
-    Z_CTS = electrons.getNode(r'yag_edgets.data:fiber_z').data() + Z_shift
-    R_CTS = (electrons.getNode(r'yag.results.param:r').data() *
-             np.ones_like(Z_CTS))
+    Te_TS = N_Te_TS.data() / 1.0e3
+    #dev_Te_TS = electrons.getNode(r'yag_edgets.results:te:error').data() / 1.0e3
+    dev_Te_TS = e_Te_TS.data() / 1.0e3
+
+    #Z_CTS = electrons.getNode(r'yag_edgets.data:fiber_z').data() + Z_shift
+    #R_CTS = (electrons.getNode(r'yag.results.param:r').data() *
+    #         np.ones_like(Z_CTS))
+    Z_CTS = z_Te_TS.data() + Z_shift
+    R_CTS = (r_Te_TS.data() * np.ones_like(Z_CTS))
     channels = list(range(0, len(Z_CTS)))
     
     t_grid, Z_grid = np.meshgrid(t_Te_TS, Z_CTS)
@@ -1217,15 +1245,20 @@ def TeCTS(shot, abscissa='RZ', t_min=None, t_max=None, electrons=None,
                                X_labels=['$t$', '$R$', '$Z$'],
                                y_label=r'$T_e$, CTS')
 
-    if electrons is None:
-        electrons = MDSplus.Tree('electrons', shot)
+    cmod_tree = MDSplus.Tree('cmod', shot)
+
+    #if electrons is None:
+    #    electrons = MDSplus.Tree('electrons', shot)
 
     try:
-        N_Te_TS = electrons.getNode(r'\electrons::top.yag_new.results.profiles:Te_rz')
+        #N_Te_TS = electrons.getNode(r'yag_new.results.profiles:Te_rz')
+        N_Te_TS = cmod_tree.getNode(r'\cmod::top.electrons.yag_new.results.profiles:te_rz')
         if (shot > 1030000000) & (shot < 1040000000):
-            N_Te_TS_old = electrons.getNode(r'\electrons::top.yag.results.global.profile:Te_rz_t')
+            #N_Te_TS_old = electrons.getNode(r'yag.results.global.profile:Te_rz_t')
+            N_Te_TS_old = cmod_tree.getNode(r'\cmod::top.electrons.yag.results.global.profile:te_rz_t')
     except:
-        N_Te_TS = electrons.getNode(r'\electrons::top.yag.results.global.profile:Te_rz_t')
+        #N_Te_TS = electrons.getNode(r'yag.results.global.profile:Te_rz_t')
+        N_Te_TS = cmod_tree.getNode(r'\cmod::top.electrons.yag.results.global.profile:te_rz_t')
 
     t_Te_TS = N_Te_TS.dim_of().data()
     if (shot > 1030000000) & (shot < 1040000000):
@@ -1234,18 +1267,24 @@ def TeCTS(shot, abscissa='RZ', t_min=None, t_max=None, electrons=None,
         Te_TS = N_Te_TS.data()
 
     try:
-        N_dev_Te_TS = electrons.getNode(r'yag_new.results.profiles:Te_err')
+        #N_dev_Te_TS = electrons.getNode(r'yag_new.results.profiles:Te_err')
+        N_dev_Te_TS = cmod_tree.getNode(r'\cmod::top.electrons.yag_new.results.profiles:te_err')
         if (shot > 1030000000) & (shot < 1040000000):
-            N_dev_Te_TS_old = electrons.getNode(r'yag.results.global.profile:Te_err_zt')
+            #N_dev_Te_TS_old = electrons.getNode(r'yag.results.global.profile:Te_err_zt')
+            N_dev_Te_TS_old = cmod_tree.getNode(r'\cmod::top.electrons.yag.results.global.profile:te_err_zt')
     except:
-        N_dev_Te_TS = electrons.getNode(r'yag.results.global.profile:Te_err_zt')
+        #N_dev_Te_TS = electrons.getNode(r'yag.results.global.profile:Te_err_zt')
+        N_dev_Te_TS = cmod_tree.getNode(r'\cmod::top.electrons.yag.results.global.profile:te_err_zt')
 
     try:
-        N_Z_CTS = electrons.getNode(r'yag_new.results.profiles:z_sorted')
+        #N_Z_CTS = electrons.getNode(r'yag_new.results.profiles:z_sorted')
+        N_Z_CTS = cmod_tree.getNode(r'\cmod::top.electrons.yag_new.results.profiles:z_sorted')
         if (shot > 1030000000) & (shot < 1040000000):
-            N_Z_CTS_old = electrons.getNode(r'yag.results.global.profile.z_sorted')
+            #N_Z_CTS_old = electrons.getNode(r'yag.results.global.profile.z_sorted')
+            N_Z_CTS_old = cmod_tree.getNode(r'\cmod::top.electrons.yag.results.global.profile.z_sorted')
     except:
-        N_Z_CTS = electrons.getNode(r'yag.results.global.profile.z_sorted')
+        #N_Z_CTS = electrons.getNode(r'yag.results.global.profile.z_sorted')
+        N_Z_CTS = cmod_tree.getNode(r'\cmod::top.electrons.yag.results.global.profile.z_sorted')
 
     if (shot > 1030000000) & (shot < 1040000000):
         dev_Te_TS = np.concatenate((N_dev_Te_TS.data(), N_dev_Te_TS_old.data()))
@@ -1254,8 +1293,10 @@ def TeCTS(shot, abscissa='RZ', t_min=None, t_max=None, electrons=None,
         dev_Te_TS = N_dev_Te_TS.data()
         Z_CTS = N_Z_CTS.data() + Z_shift
 
-    R_CTS = (electrons.getNode(r'yag.results.param:r').data() *
-             np.ones_like(Z_CTS))
+    r_CTS = cmod_tree.getNode(r'\cmod::top.electrons.yag.results.param:r')
+    R_CTS = (r_CTS.data() * np.ones_like(Z_CTS))
+    #R_CTS = (electrons.getNode(r'yag.results.param:r').data() *
+    #         np.ones_like(Z_CTS))
     channels = list(range(0, len(Z_CTS)))
  
     t_grid, Z_grid = np.meshgrid(t_Te_TS, Z_CTS)
@@ -1309,7 +1350,7 @@ def smooth(y, box_pts):
     y_smooth = np.convolve(y, box, mode='same')
     return y_smooth
 
-def get_CMOD_var(var,shot, tmin=None, tmax=None, plot=False, return_time=False):
+def get_CMOD_var(var, shot, tmin=None, tmax=None, plot=False, return_time=False):
     ''' Get tree variable for a CMOD shot. If a time window is given, the value averaged over that window is returned,
     or else the time series is given.  See list below for acceptable input variables.
     '''
@@ -1479,160 +1520,207 @@ def get_CMOD_var(var,shot, tmin=None, tmax=None, plot=False, return_time=False):
             return data
 
 
-def get_CMOD_var_list(var_list,shot,tmin,tmax, data_dict):
+def get_CMOD_var_list(var_list, shot, tmin=None, tmax=None, data_dict=None, eq='analysis'):
     ''' Get tree variable for a CMOD shot. If a time window is given, the value averaged over that window is returned,
     or else the time series is given.  See list below for acceptable input variables.
     '''
+    data = {}
+    if not isinstance(data_dict, dict):
+        data_dict = {}
 
     if shot in data_dict.keys():
-        magnetics = data_dict[shot]['magnetics']
-        analysis = data_dict[shot]['analysis']
-        electrons = data_dict[shot]['electrons']
-        RF = data_dict[shot]['RF']
-        spectroscopy = data_dict[shot]['spectroscopy']
-        edge = data_dict[shot]['edge']
+        cmod_tree = data_dict[shot]['tree']
+        eq = data_dict[shot]['equilibrium']
+        #magnetics = data_dict[shot]['magnetics']
+        #analysis = data_dict[shot]['analysis']
+        #electrons = data_dict[shot]['electrons']
+        #RF = data_dict[shot]['RF']
+        #spectroscopy = data_dict[shot]['spectroscopy']
+        #edge = data_dict[shot]['edge']
     else:
-        magnetics = MDSplus.Tree('magnetics', shot) 
-        analysis = MDSplus.Tree('analysis', shot)
-        electrons = MDSplus.Tree('electrons', shot)
-        RF = MDSplus.Tree('RF', shot)
-        spectroscopy = MDSplus.Tree('spectroscopy', shot)
-        edge = MDSplus.Tree('edge', shot)
+        cmod_tree = MDSplus.Tree("cmod", shot)
+        #magnetics = MDSplus.Tree('magnetics', shot)
+        #analysis = MDSplus.Tree('analysis', shot)
+        #electrons = MDSplus.Tree('electrons', shot)
+        #RF = MDSplus.Tree('RF', shot)
+        #spectroscopy = MDSplus.Tree('spectroscopy', shot)
+        #edge = MDSplus.Tree('edge', shot)
 
         data_dict[shot] = dict()
-        data_dict[shot]['magnetics'] = magnetics
-        data_dict[shot]['analysis'] = analysis
-        data_dict[shot]['electrons'] = electrons
-        data_dict[shot]['RF'] = RF
-        data_dict[shot]['spectroscopy'] = spectroscopy
-        data_dict[shot]['edge'] = edge
+        data_dict[shot]['tree'] = cmod_tree
+        data_dict[shot]['equilibrium'] = eq
+        #data_dict[shot]['magnetics'] = magnetics
+        #data_dict[shot]['analysis'] = analysis
+        #data_dict[shot]['electrons'] = electrons
+        #data_dict[shot]['RF'] = RF
+        #data_dict[shot]['spectroscopy'] = spectroscopy
+        #data_dict[shot]['edge'] = edge
 
-    for var in var_list:
+   for var in var_list:
+        data[var] = {}
         if var=='Bt':
-            data_dict[shot][var] = magnetics.getNode('\\magnetics::Bt')
+            #data_dict[shot][var] = magnetics.getNode('\\magnetics::Bt')
+            data_dict[shot][var] = cmod_tree.getNode(r'\cmod::top.mhd.magnetics.diamag_coils:btor')
         elif var=='Bp':
             # use Bpolav, average poloidal B field --> see definition in Silvagni NF 2020
-            data_dict[shot][var] = analysis.getNode('\\EFIT_AEQDSK:bpolav')
+            #data_dict[shot][var] = analysis.getNode('\\EFIT_AEQDSK:bpolav')
+            pass
         elif var=='Ip':
-            data_dict[shot][var] = magnetics.getNode('\\magnetics::Ip')
+            #data_dict[shot][var] = magnetics.getNode('\\magnetics::Ip')
+            data_dict[shot][var] = cmod_tree.getNode(r'\cmod::top.mhd.magnetics.processed.current_data:ip')
         elif var=='nebar':
-            data_dict[shot][var] = electrons.getNode('\\electrons::top.tci.results:nl_04')
+            #data_dict[shot][var] = electrons.getNode('\\electrons::top.tci.results:nl_04')
+            data_dict[shot][var] = cmod_tree.getNode(r'\cmod::top.electrons.tci.results:nl_04')
         elif var=='P_RF':
-            data_dict[shot][var] = RF.getNode('\\RF::RF_power_net')
+            #data_dict[shot][var] = RF.getNode('\\RF::RF_power_net')
+            data_dict[shot][var] = cmod_tree.getNode(r'\cmod::top.rf.antenna.results:pwr_net_tot')
         elif var=='P_rad_main':
-            try: 
-                data_dict[shot][var] = spectroscopy.getNode('\\spectroscopy::top.bolometer:results:foil:main_power')
+            try:
+                #data_dict[shot][var] = spectroscopy.getNode('\\spectroscopy::top.bolometer:results:foil:main_power')
+                data_dict[shot][var] = cmod_tree.getNode(r'\cmod::top.spectroscopy.bolometer:twopi_foil')
             except:
                 data_dict[shot][var] = None
         elif var=='P_rad_diode':
-            data_dict[shot][var] = spectroscopy.getNode('\\spectroscopy::top.bolometer:twopi_diode')
+            #data_dict[shot][var] = spectroscopy.getNode('\\spectroscopy::top.bolometer:twopi_diode')
+            data_dict[shot][var] = cmod_tree.getNode(r'\cmod::top.spectroscopy.bolometer:twopi_diode')
         elif var=='p_D2':
-            data_dict[shot][var] = edge.getNode('\\edge::top.gas.ratiomatic.f_side')
+            #data_dict[shot][var] = edge.getNode('\\edge::top.gas.ratiomatic.f_side')
+            data_dict[shot][var] = cmod_tree.getNode(r'\cmod::top.edge.gas.ratiomatic:f_side')
         elif var=='p_E_BOT_MKS':
-            data_dict[shot][var] = edge.getNode('\\edge::e_bot_mks')
+            #data_dict[shot][var] = edge.getNode('\\edge::e_bot_mks')
+            data_dict[shot][var] = cmod_tree.getNode(r'\cmod::top.edge.gas.mks:e_bot')
         elif var=='p_B_BOT_MKS':
-            data_dict[shot][var] = edge.getNode('\\edge::b_bot_mks')
+            #data_dict[shot][var] = edge.getNode('\\edge::b_bot_mks')
+            data_dict[shot][var] = cmod_tree.getNode(r'\cmod::top.edge.gas.mks.b_bot')
         elif var=='p_F_CRYO_MKS':
-            try: 
-                data_dict[shot][var] = edge.getNode('\\edge::f_cryo_mks')
+            try:
+                #data_dict[shot][var] = edge.getNode('\\edge::f_cryo_mks')
+                data_dict[shot][var] = cmod_tree.getNode(r'\cmod::top.edge.gas.mks:f_cryo')
             except:
                 data_dict[shot][var] = None
         elif var=='p_G_SIDE_RAT':
-            data_dict[shot][var] = edge.getNode('\\edge::g_side_rat')
+            #data_dict[shot][var] = edge.getNode('\\edge::g_side_rat')
+            data_dict[shot][var] = cmod_tree.getNode(r'\cmod::top.edge.gas.mks:g_side')
         elif var=='q95':
-            data_dict[shot][var] = analysis.getNode('\\efit_aeqdsk:qpsib')
+            #data_dict[shot][var] = analysis.getNode('\\efit_aeqdsk:qpsib')
+            if eq != 'analysis':
+                try:
+                    data_dict[shot][var] = cmod_tree.getNode(r'\cmod::top.mhd.efit_runs.' + f'{eq.lower()}' + '.results.a_eqdsk:qpsib')
+                except:
+                    data_dict[shot][var] = cmod_tree.getNode(r'\cmod::top.mhd.analysis.efit.results.a_eqdsk:qpsib')
+            else:
+                data_dict[shot][var] = cmod_tree.getNode(r'\cmod::top.mhd.analysis.efit.results.a_eqdsk:qpsib')
         elif var=='Wmhd':
-            data_dict[shot][var] = analysis.getNode('\\efit_aeqdsk:wplasm')
+            #data_dict[shot][var] = analysis.getNode('\\efit_aeqdsk:wplasm')
+            if eq != 'analysis':
+                try:
+                    data_dict[shot][var] = cmod_tree.getNode(r'\cmod::top.mhd.efit_runs.' + f'{eq.lower()}' + '.results.a_eqdsk:wplasm')
+                except:
+                    data_dict[shot][var] = cmod_tree.getNode(r'\cmod::top.mhd.analysis.efit.results.a_eqdsk:wplasm')
+            else:
+                data_dict[shot][var] = cmod_tree.getNode(r'\cmod::top.mhd.analysis.efit.results.a_eqdsk:wplasm')
         elif var=='dWdt':
-            t,data = get_dWdt(shot, tmin=tmin, tmax=tmax)   # tries to fit Wmhd and get gradient
-        elif var=='areao':
-            data_dict[shot][var] = analysis.getNode('\\efit_aeqdsk:areao')
-        elif var=='betat':
-            data_dict[shot][var] = analysis.getNode('\\efit_aeqdsk:betat')
-        elif var=='betap':
-            data_dict[shot][var] = analysis.getNode('\\efit_aeqdsk:betap')
+            t, dat = get_dWdt(shot, tmin=tmin, tmax=tmax, eq=eq)   # tries to fit Wmhd and get gradient
+            data[var]['value'] = dat
+            data[var]['time'] = t
+        #elif var=='areao':
+        #    data_dict[shot][var] = analysis.getNode('\\efit_aeqdsk:areao')
+        #elif var=='betat':
+        #    data_dict[shot][var] = analysis.getNode('\\efit_aeqdsk:betat')
+        #elif var=='betap':
+        #    data_dict[shot][var] = analysis.getNode('\\efit_aeqdsk:betap')
         elif var=='P_oh':
-            t,data = get_P_ohmic(shot)   # accurate routine to estimate Ohmic power
-        elif var=='li':
-            data_dict[shot][var] = analysis.getNode('\\efit_aeqdsk:ali')
+            t, dat = get_P_ohmic(shot, eq=eq)   # accurate routine to estimate Ohmic power
+            data[var]['value'] = dat
+            data[var]['time'] = t
+        #elif var=='li':
+        #    data_dict[shot][var] = analysis.getNode('\\efit_aeqdsk:ali')
         elif var=='h_alpha':
-            data_dict[shot][var] = spectroscopy.getNode('\\ha_2_bright')
-        elif var=='cryo_on':
-            data_dict[shot][var] = edge.getNode('\\edge::top.cryopump:message')
-        elif var=='ssep':
-            data_dict[shot][var] = analysis.getNode('\\efit_aeqdsk:ssep')
-        elif var=='Lgap':
-            data_dict[shot][var] = analysis.getNode('\\efit_aeqdsk:oleft')
-        elif var=='Rgap':
-            data_dict[shot][var] = analysis.getNode('\\efit_aeqdsk:oright')
-        elif var=='kappa':
-            data_dict[shot][var] = analysis.getNode('\\efit_aeqdsk:eout')
-        elif var=='Udelta':
-            data_dict[shot][var] = analysis.getNode('\\efit_aeqdsk:doutu')
-        elif var=='Ldelta':
-            data_dict[shot][var] = analysis.getNode('\\efit_aeqdsk:doutl')
+            #data_dict[shot][var] = spectroscopy.getNode('\\ha_2_bright')
+            data_dict[shot][var] = cmod_tree.getNode(r'\cmod::top.spectroscopy.uvis:ha_2_bright')
+        #elif var=='cryo_on':
+        #    data_dict[shot][var] = edge.getNode('\\edge::top.cryopump:message')
+        #elif var=='ssep':
+        #    data_dict[shot][var] = analysis.getNode('\\efit_aeqdsk:ssep')
+        #elif var=='Lgap':
+        #    data_dict[shot][var] = analysis.getNode('\\efit_aeqdsk:oleft')
+        #elif var=='Rgap':
+        #    data_dict[shot][var] = analysis.getNode('\\efit_aeqdsk:oright')
+        #elif var=='kappa':
+        #    data_dict[shot][var] = analysis.getNode('\\efit_aeqdsk:eout')
+        #elif var=='Udelta':
+        #    data_dict[shot][var] = analysis.getNode('\\efit_aeqdsk:doutu')
+        #elif var=='Ldelta':
+        #    data_dict[shot][var] = analysis.getNode('\\efit_aeqdsk:doutl')
+        elif var=='Zeff':
+            data_dict[shot][var] = cmod_tree.getNode(r'\cmod::top.spectroscopy.z_meter.analysis:z_ave')
         else:
             raise ValueError('Variable '+var+' was not recognized!')
 
-
         if var not in ['P_oh','dWdt', 'P_rad_main']:
-
-            if data_dict[shot][var] is not None: 
-                data = data_dict[shot][var].data()
-                t = data_dict[shot][var].dim_of(0).data()
-
+            if data_dict[shot][var] is not None:
+                data[var]['value'] = data_dict[shot][var].data()
+                data[var]['time'] = data_dict[shot][var].dim_of(0).data()
                 if var=='p_E_BOT_MKS' or var=='p_B_BOT_MKS' or var=='p_F_CRYO_MKS':  # anomalies in data storage
-                    if data is not None:
-                        data = data[0,:]
+                    if data_dict[shot][var] is not None:
+                        data[var]['value'] = data[var]['value'][0,:]
             else:
-                t,data = np.nan, np.nan
-        
+                data[var]['time'] = np.nan
+                data[var]['value'] = np.nan
+
         if var=='P_rad_diode':
             #if radvar == 'main', no need to scale
-            if data is not None:
+            if data_dict[shot][var] is not None:
                 # From B.Granetz's matlab scripts: factor of 4.5 from cross-calibration with 2pi_foil during flattop
                 # NB: Bob's scripts mention that this is likely not accurate when p_rad (uncalibrated) <= 0.5 MW
                 #data *= 4.5
-                data *= 3 # suggestion by JWH
+                data[var]['value'] *= 3 # suggestion by JWH
                 # data from the twopi_diode is output in kW. Change to MW for consistency
-                data /= 1e3
+                data[var]['value'] /= 1.0e3
         if var=='P_rad_main':
             # if radvar == 'main', just need to convert to MW
             try:
-                data /= 1e6
+                data[var]['value'] /= 1.0e6
             except:
                 print('No P_rad_main')
 
         if var=='nebar':
             # nl needs to be divided by the chord length
-            node_l = analysis.getNode('\\efit_aeqdsk:rco2v')
+            #node_l = analysis.getNode('\\efit_aeqdsk:rco2v')
+            if eq != 'analysis':
+                try:
+                    node_l = cmod_tree.getNode('\\cmod::top.mhd.efit_runs.' + f'{eq.lower()}' + '.results.a_eqdsk:rco2v')
+                except:
+                    node_l = cmod_tree.getNode('\\cmod::top.mhd.analysis.efit.results.a_eqdsk:rco2v')
+            else:
+                node_l = cmod_tree.getNode('\\cmod::top.mhd.analysis.efit.results.a_eqdsk:rco2v')
 
             try:
-                l04_m = node_l.data()[:,3]/1e2 # 4th channel, convert cm to m
+                l04_m = node_l.data()[:,3] / 1.0e2 # 4th channel, convert cm to m
                 t_l04 = node_l.dim_of(1).data()
 
                 # need to interpolate onto nl04 timebase
                 from scipy.interpolate import interp1d
                 l04_m_tb = interp1d(t_l04, l04_m, bounds_error=False, fill_value='extrapolate')(t)
-           
-                zero_inds = np.where(l04_m_tb == 0)[0]
-                l04_m_tb[zero_inds] = 1e-10 # dummy to avoid error
 
-                if len(data.shape) > 1: # error catcher
-                    data = data[:,0]
-                data /= l04_m_tb # nl04/l04
+                zero_inds = np.where(l04_m_tb <= 0, 1.0e-10, l04_m_tb)
+                #l04_m_tb[zero_inds] = 1e-10 # dummy to avoid error
+
+                if len(data[var]['value'].shape) > 1: # error catcher
+                    data[var]['value'] = data[var]['value'][:,0]
+                data[var]['value'] /= l04_m_tb # nl04/l04
             except:
                 print('ne_l or chord length not available')
-                t, data = np.nan, np.nan
-        
+                data[var]['time'] = np.nan
+                data[var]['value'] = np.nan
+
         if var=='ssep':
-            mask_ssep = np.logical_and(data<3, data>-3)
-            data = data[mask_ssep]
+            mask_ssep = np.logical_and(data[var]['value'] < 3, data[var]['value'] > -3)
+            data[var]['value'] = data[var]['value'][mask_ssep]
 
-    return t, data, data_dict
+    return data, data_dict
 
-
-def get_P_ohmic(shot):
+def get_P_ohmic(shot, eq='analysis'):
     ''' Get Ohmic power
 
     Translated/adapted from scopes:
@@ -1644,9 +1732,25 @@ def get_P_ohmic(shot):
     _poh=_ip*(_vsurf-_vi)/1.e6
     '''
 
+    cmod_tree = MDSplus.Tree('cmod', shot)
+
     # psi at the edge:
-    analysis = MDSplus.Tree('analysis', shot)
-    ssibry_node = analysis.getNode('\\analysis::efit_ssibry')
+    #analysis = MDSplus.Tree('analysis', shot)
+    #ssibry_node = analysis.getNode('\\analysis::efit_ssibry')
+    if eq != 'analysis':
+        try:
+            ssibry_node = cmod_tree.getNode('\\cmod::top.mhd.efit_runs.' + f'{eq.lower()}' + '.results.a_eqdsk:sibdry')
+            ip_node = cmod_tree.getNode('\\cmod::top.mhd.efit_runs.' + f'{eq.lower()}' + 'results.a_eqdsk:cpasma')
+            li_node = cmod_tree.getNode('\\cmod::top.mhd.efit_runs.' + f'{eq.lower()}' + 'results.a_eqdsk:ali')
+        except:
+            ssibry_node = cmod_tree.getNode('\\cmod::top.mhd.analysis.efit.results.a_eqdsk:sibdry')
+            ip_node = cmod_tree.getNode('\\cmod::top.mhd.analysis.efit.results.a_eqdsk:cpasma')
+            li_node = cmod_tree.getNode('\\cmod::top.mhd.analysis.efit.results.a_eqdsk:ali')
+    else:
+        ssibry_node = cmod_tree.getNode('\\cmod::top.mhd.analysis.efit.results.a_eqdsk:sibdry')
+        ip_node = cmod_tree.getNode('\\cmod::top.mhd.analysis.efit.results.a_eqdsk:cpasma')
+        li_node = cmod_tree.getNode('\\cmod::top.mhd.analysis.efit.results.a_eqdsk:ali')
+
     time = ssibry_node.dim_of(0).data()
     ssibry = ssibry_node.data()
     
@@ -1670,7 +1774,7 @@ def get_P_ohmic(shot):
     return time, P_oh
 
 
-def get_dWdt(shot, tmin=None, tmax=None, plot=False):
+def get_dWdt(shot, tmin=None, tmax=None, plot=False, eq='analysis'):
     '''Function to do X
 
     This function does X by doing Y   
@@ -1686,9 +1790,18 @@ def get_dWdt(shot, tmin=None, tmax=None, plot=False):
         This is what is returned
 
     ''' 
-        
-    analysis = MDSplus.Tree('analysis', shot)
-    node = analysis.getNode('\\efit_aeqdsk:wplasm')
+
+    cmod_tree = MDSplus.Tree('cmod', shot)
+    if eq != 'analysis':
+        try:
+            node = cmod_tree.getNode('\\cmod::top.mhd.efit_runs.' + f'{eq.lower()}' + '.results.a_eqdsk:wplasm')
+        except:
+            node = cmod_tree.getNode('\\cmod::top.mhd.analysis.efit.results.a_eqdsk:wplasm')
+    else:
+        node = cmod_tree.getNode('\\cmod::top.mhd.analysis.efit.results.a_eqdsk:wplasm')
+
+    #analysis = MDSplus.Tree('analysis', shot)
+    #node = analysis.getNode('\\efit_aeqdsk:wplasm')
     
     Wmhd = node.data()
     t = node.dim_of(0).data()
@@ -1713,7 +1826,7 @@ def get_dWdt(shot, tmin=None, tmax=None, plot=False):
         Wmhd_fit = powerlaw(tt, *popt)
         grad_Wmhd_fit = np.gradient(Wmhd_fit, tt)
 
-        return tt, grad_Wmhd_fit/1e6
+        return tt, grad_Wmhd_fit / 1.0e6
 
 
     else:
@@ -1726,7 +1839,7 @@ def get_dWdt(shot, tmin=None, tmax=None, plot=False):
         # interpolate back to t grid
         grad_Wmhd = interp1d(tt, grad_Wmhd_fit)(t)
 
-        return t,grad_Wmhd/1e6
+        return t,grad_Wmhd / 1.0e6
 
 
 ##########################
@@ -2376,6 +2489,123 @@ class Equilibrium(object):
         else:
             return out
    
+    def rz2phinorm(self, *args, **kwargs):
+        r"""Calculates the normalized toroidal flux.
+
+        Uses the definitions:
+
+        .. math::
+
+            \texttt{phi} &= \int q(\psi)\,d\psi\\
+            \texttt{phi\_norm} &= \frac{\phi}{\phi(a)}
+
+        This is based on the IDL version efit_rz2rho.pro by Steve Wolfe.
+
+        Args:
+            R (Array-like or scalar float): Values of the radial coordinate to
+                map to phinorm. If `R` and `Z` are both scalar values,
+                they are used as the coordinate pair for all of the values in
+                `t`. Must have the same shape as `Z` unless the `make_grid`
+                keyword is set. If the `make_grid` keyword is True, `R` must
+                have exactly one dimension.
+            Z (Array-like or scalar float): Values of the vertical coordinate to
+                map to phinorm. If `R` and `Z` are both scalar values,
+                they are used as the coordinate pair for all of the values in
+                `t`. Must have the same shape as `R` unless the `make_grid`
+                keyword is set. If the `make_grid` keyword is True, `Z` must
+                have exactly one dimension.
+            t (Array-like or scalar float): Times to perform the conversion at.
+                If `t` is a single value, it is used for all of the elements of
+                `R`, `Z`. If the `each_t` keyword is True, then `t` must be
+                scalar or have exactly one dimension. If the `each_t` keyword is
+                False, `t` must have the same shape as `R` and `Z` (or their
+                meshgrid if `make_grid` is True).
+
+        Keyword Args:
+            sqrt (Boolean): Set to True to return the square root of phinorm.
+                Only the square root of positive values is taken. Negative
+                values are replaced with zeros, consistent with Steve Wolfe's
+                IDL implementation efit_rz2rho.pro. Default is False.
+            each_t (Boolean): When True, the elements in `R`, `Z` are evaluated
+                at each value in `t`. If True, `t` must have only one dimension
+                (or be a scalar). If False, `t` must match the shape of `R` and
+                `Z` or be a scalar. Default is True (evaluate ALL `R`, `Z` at
+                EACH element in `t`).
+            make_grid (Boolean): Set to True to pass `R` and `Z` through
+                :py:func:`np.meshgrid` before evaluating. If this is set to
+                True, `R` and `Z` must each only have a single dimension, but
+                can have different lengths. Default is False (do not form
+                meshgrid).
+            length_unit (String or 1): Length unit that `R`, `Z` are given in.
+                If a string is given, it must be a valid unit specifier:
+
+                    ===========  ===========
+                    'm'          meters
+                    'cm'         centimeters
+                    'mm'         millimeters
+                    'in'         inches
+                    'ft'         feet
+                    'yd'         yards
+                    'smoot'      smoots
+                    'cubit'      cubits
+                    'hand'       hands
+                    'default'    meters
+                    ===========  ===========
+
+                If length_unit is 1 or None, meters are assumed. The default
+                value is 1 (use meters).
+            k (positive int): The degree of polynomial spline interpolation to
+                use in converting psinorm to phinorm.
+            return_t (Boolean): Set to True to return a tuple of (`rho`,
+                `time_idxs`), where `time_idxs` is the array of time indices
+                actually used in evaluating `rho` with nearest-neighbor
+                interpolation. (This is mostly present as an internal helper.)
+                Default is False (only return `rho`).
+
+        Returns:
+            `phinorm` or (`phinorm`, `time_idxs`)
+
+            * **phinorm** (`Array or scalar float`) - The normalized toroidal
+              flux. If all of the input arguments are scalar, then a scalar is
+              returned. Otherwise, a numpy Array is returned. If `R` and `Z`
+              both have the same shape then `phinorm` has this shape as well,
+              unless the `make_grid` keyword was True, in which case `phinorm`
+              has shape (len(`Z`), len(`R`)).
+            * **time_idxs** (Array with same shape as `phinorm`) - The indices
+              (in :py:meth:`self.getTimeBase`) that were used for
+              nearest-neighbor interpolation. Only returned if `return_t` is
+              True.
+
+
+        Examples:
+            All assume that `Eq_instance` is a valid instance of the appropriate
+            extension of the :py:class:`Equilibrium` abstract class.
+
+            Find single phinorm value at R=0.6m, Z=0.0m, t=0.26s::
+
+                phi_val = Eq_instance.rz2phinorm(0.6, 0, 0.26)
+
+            Find phinorm values at (R, Z) points (0.6m, 0m) and (0.8m, 0m) at the
+            single time t=0.26s. Note that the `Z` vector must be fully specified,
+            even if the values are all the same::
+
+                phi_arr = Eq_instance.rz2phinorm([0.6, 0.8], [0, 0], 0.26)
+
+            Find phinorm values at (R, Z) points (0.6m, 0m) at times t=[0.2s, 0.3s]::
+
+                phi_arr = Eq_instance.rz2phinorm(0.6, 0, [0.2, 0.3])
+
+            Find phinorm values at (R, Z, t) points (0.6m, 0m, 0.2s) and (0.5m, 0.2m, 0.3s)::
+
+                phi_arr = Eq_instance.rz2phinorm([0.6, 0.5], [0, 0.2], [0.2, 0.3], each_t=False)
+
+            Find phinorm values on grid defined by 1D vector of radial positions `R`
+            and 1D vector of vertical positions `Z` at time t=0.2s::
+
+                phi_mat = Eq_instance.rz2phinorm(R, Z, 0.2, make_grid=True)
+        """
+        return self._RZ2Quan(self._getPhiNormSpline, *args, **kwargs)
+
     def rz2rho(self, method, *args, **kwargs):
         r"""Convert the passed (R, Z, t) coordinates into one of several coordinates.
         
@@ -2873,7 +3103,71 @@ class Equilibrium(object):
             t,
             **kwargs
         )
-    
+
+    def psinorm2phinorm(self, psi_norm, t, **kwargs):
+        """Calculates the normalized toroidal flux corresponding to the passed psi_norm (normalized poloidal flux) values.
+
+        Args:
+            psi_norm (Array-like or scalar float): Values of the normalized
+                poloidal flux to map to phinorm.
+            t (Array-like or scalar float): Times to perform the conversion at.
+                If `t` is a single value, it is used for all of the elements of
+                `psi_norm`. If the `each_t` keyword is True, then `t` must be scalar
+                or have exactly one dimension. If the `each_t` keyword is False,
+                `t` must have the same shape as `psi_norm`.
+
+        Keyword Args:
+            sqrt (Boolean): Set to True to return the square root of phinorm. Only
+                the square root of positive values is taken. Negative values are
+                replaced with zeros, consistent with Steve Wolfe's IDL
+                implementation efit_rz2rho.pro. Default is False.
+            each_t (Boolean): When True, the elements in `psi_norm` are evaluated at
+                each value in `t`. If True, `t` must have only one dimension (or
+                be a scalar). If False, `t` must match the shape of `psi_norm` or be
+                a scalar. Default is True (evaluate ALL `psi_norm` at EACH element in
+                `t`).
+            k (positive int): The degree of polynomial spline interpolation to
+                use in converting coordinates.
+            return_t (Boolean): Set to True to return a tuple of (`rho`,
+                `time_idxs`), where `time_idxs` is the array of time indices
+                actually used in evaluating `rho` with nearest-neighbor
+                interpolation. (This is mostly present as an internal helper.)
+                Default is False (only return `rho`).
+
+        Returns:
+            `phinorm` or (`phinorm`, `time_idxs`)
+
+            * **phinorm** (`Array or scalar float`) - The converted coordinates. If
+              all of the input arguments are scalar, then a scalar is returned.
+              Otherwise, a numpy Array is returned.
+            * **time_idxs** (Array with same shape as `phinorm`) - The indices
+              (in :py:meth:`self.getTimeBase`) that were used for
+              nearest-neighbor interpolation. Only returned if `return_t` is
+              True.
+
+        Examples:
+            All assume that `Eq_instance` is a valid instance of the appropriate
+            extension of the :py:class:`Equilibrium` abstract class.
+
+            Find single phinorm value for psinorm=0.7, t=0.26s::
+
+                phinorm_val = Eq_instance.psinorm2phinorm(0.7, 0.26)
+
+            Find phinorm values at psi_norm values of 0.5 and 0.7 at the single time
+            t=0.26s::
+
+                phinorm_arr = Eq_instance.psinorm2phinorm([0.5, 0.7], 0.26)
+
+            Find phinorm values at psi_norm=0.5 at times t=[0.2s, 0.3s]::
+
+                phinorm_arr = Eq_instance.psinorm2phinorm(0.5, [0.2, 0.3])
+
+            Find phinorm values at (psinorm, t) points (0.6, 0.2s) and (0.5, 0.3s)::
+
+                phinorm_arr = Eq_instance.psinorm2phinorm([0.6, 0.5], [0.2, 0.3], each_t=False)
+        """
+        return self._psinorm2Quan(self._getPhiNormSpline, psi_norm, t, **kwargs)
+
     def psinorm2rho(self, method, *args, **kwargs):
         r"""Convert the passed (psinorm, t) coordinates into one of several coordinates.
         
@@ -3005,7 +3299,7 @@ class Equilibrium(object):
             return self.psinorm2v(*args, **kwargs)
         else:
             raise ValueError("psinorm2rho: Unsupported normalized coordinate method '%s'!" % method)
-    
+
     def _getLengthConversionFactor(self, start, end, default=None):
         """Gets the conversion factor to convert from units start to units end.
         
@@ -3753,6 +4047,77 @@ class Equilibrium(object):
                 s=0
             )
             return self._psiOfRZSpline[idx]
+
+    def _getPhiNormSpline(self, idx, k=3):
+        """Get spline to convert psinorm to phinorm.
+
+        Returns the spline object corresponding to the passed time index idx,
+        generating it if it does not already exist.
+
+        Args:
+            idx (Scalar int):
+                The time index to retrieve the flux spline for.
+                This is ASSUMED to be a valid index for the first dimension of
+                self.getFluxGrid(), otherwise an IndexError will be raised.
+
+        Keyword Args:
+            k (positive int)
+                Polynomial degree of spline to use. Default is 3.
+
+        Returns:
+            :py:class:`trispline.UnivariateInterpolator` or
+                :py:class:`tripline.RectBivariateSpline` depending on whether or
+                not the instance was created with the `tspline` keyword.
+        """
+        if not self._tricubic:
+            try:
+                return self._phiNormSpline[idx][k]
+            except KeyError:
+                # Insert zero at beginning because older versions of cumtrapz
+                # don't support the initial keyword to make the initial value
+                # zero:
+                # we need to add the psi axis
+                x = (
+                    np.linspace(0, 1, num=self.getQProfile()[idx].size) *
+                    (self.getFluxLCFS()[idx] - self.getFluxAxis()[idx])
+                )
+                phi_norm_meas = np.insert(
+                    scipy.integrate.cumulative_trapezoid(self.getQProfile()[idx], x=x),
+                    0, 0
+                )
+                phi_norm_meas = phi_norm_meas / phi_norm_meas[-1]
+
+                spline = UnivariateInterpolator(
+                    np.linspace(0.0, 1.0, len(phi_norm_meas)),
+                    phi_norm_meas,
+                    k=k
+                )
+
+                try:
+                    self._phiNormSpline[idx][k] = spline
+                except KeyError:
+                    self._phiNormSpline[idx] = {k: spline}
+                return self._phiNormSpline[idx][k]
+        else:
+            if self._phiNormSpline:
+                return self._phiNormSpline
+            else:
+                # Insert zero at beginning because older versions of cumtrapz
+                # don't support the initial keyword to make the initial value
+                # zero:
+                phi_norm_meas = np.insert(
+                    scipy.integrate.cumulative_trapezoid(self.getQProfile(), axis=1),
+                    0, 0, axis=1
+                )
+                phi_norm_meas = phi_norm_meas / phi_norm_meas[:, -1, np.newaxis]
+                self._phiNormSpline = RectBivariateSpline(
+                    self.getTimeBase(),
+                    np.linspace(0, 1, len(phi_norm_meas[0, :])),
+                    phi_norm_meas,
+                    bounds_error=False,
+                    s=0
+                )
+                return self._phiNormSpline
 
     def rz2BZ(self, R, Z, t, return_t=False, make_grid=False, each_t=True, length_unit=1):
         r"""Calculates the vertical component of the magnetic field at the given (R, Z, t) coordinates.
@@ -4522,7 +4887,7 @@ class EFITTree(Equilibrium):
             safer method).
     """
     def __init__(self, shot, tree, root, length_unit='m', gfile = 'g_eqdsk', 
-                 afile='a_eqdsk', tspline=False, monotonic=True):
+                 afile='a_eqdsk', fitout='fitout', tspline=False, monotonic=True):
         if not _has_MDS:
             print("MDSplus module did not load properly. Exception is below:")
             print(_e_MDS.__class__)
@@ -4540,6 +4905,7 @@ class EFITTree(Equilibrium):
         self._root = root
         self._gfile = gfile
         self._afile = afile
+        self._fitout = fitout
 
         self._MDSTree = MDSplus.Tree(self._tree, self._shot)
         
@@ -4584,11 +4950,13 @@ class EFITTree(Equilibrium):
         self._aLCFS = None                                                   #outboard-midplane minor radius (t)
         self._RmidLCFS = None                                                #outboard-midplane major radius (t)
         self._areaLCFS = None                                                #LCFS surface area (t)
+        self._nLCFS = None
         self._RLCFS = None                                                   #R-positions of LCFS (t,n)
         self._ZLCFS = None                                                   #Z-positions of LCFS (t,n)
         self._RCentr = None                                                  #Radius for BCentr calculation (for gfiles) (t)
         
         #machine geometry parameters
+        self._nLimiter = None
         self._Rlimiter = None                                                #R-positions of vacuum-vessel wall (t)
         self._Zlimiter = None                                                #Z-positions of vacuum-vessel wall (t)
 
@@ -4632,7 +5000,34 @@ class EFITTree(Equilibrium):
         self.getFluxAxis()
         self.getVolLCFS()
         self.getQProfile()
-        self.getRmidPsi()
+        #self.getRmidPsi()
+        self.getRCentre()
+        self.getZCentre()
+        self.getBCentre()
+        self.getMagR()
+        self.getMagZ()
+        self.getIpCalc()
+        self.getIpMeas()
+        self.getBtPlas()
+        self.getBtVac()
+        self.getF()
+        self.getFFprime()
+        self.getPres()
+        self.getPprime()
+        self.getBoundaryN()
+        self.getBoundaryR()
+        self.getBoundaryZ()
+        self.getWallN()
+        self.getWallR()
+        self.getWallZ()
+        self.getBPolAverage()
+        self.getSafetyFactor95()
+        self.getLiMHD()
+        self.getBetaPolMHD()
+        self.getBetaTorMHD()
+        self.getStoredEnergyMHD()
+        self.getStoredEnergyDotMHD()
+        self.getEnergyConfinementTimeMHD()
 
     def getTimeBase(self):
         """returns EFIT time base vector.
@@ -4775,7 +5170,8 @@ class EFITTree(Equilibrium):
         """
         if self._RmidPsi is None:
             try:
-                RmidPsiNode = self._MDSTree.getNode(self._root+'fitout:rpres')
+                #RmidPsiNode = self._MDSTree.getNode(self._root+'fitout:rpres')
+                RmidPsiNode = self._MDSTree.getNode(self._root+'efit_rpres')
                 self._RmidPsi = RmidPsiNode.data()
                 # Units aren't properly stored in the tree for this one!
                 if RmidPsiNode.units != ' ':
@@ -4859,6 +5255,36 @@ class EFITTree(Equilibrium):
                                                       length_unit)
         return unit_factor * self._zGrid.copy()
 
+    def getRCentre(self):
+        if self._RCentr is None:
+            try:
+                rcentreNode = self._MDSTree.getNode(self._root+self._afile+':r0')
+                self._RCentr = rcentreNode.data()
+                self._defaultUnits['_RCentr'] = str(rcentreNode.units)
+            except:
+                raise ValueError('data retrieval failed.')
+        return self._RCentr.copy()
+
+    def getZCentre(self):
+        if self._ZCentr is None:
+            try:
+                zcentreNode = self._MDSTree.getNode(self._root+self._afile+':z0')
+                self._ZCentr = zcentreNode.data()
+                self._defaultUnits['_ZCentr'] = str(zcentreNode.units)
+            except:
+                raise ValueError('data retrieval failed.')
+        return self._ZCentr.copy()
+
+    def getBCentre(self):
+        if self._BCentr is None:
+            try:
+                bcentreNode = self._MDSTree.getNode(self._root+self._afile+':bt0vac')
+                self._BCentr = bcentreNode.data()
+                self._defaultUnits['_BCentr'] = str(bcentreNode.units)
+            except:
+                raise ValueError('data retrieval failed.')
+        return self._BCentr.copy()
+
     def getCurrentSign(self):
         """Returns the sign of the current, based on the check in Steve Wolfe's 
         IDL implementation efit_rz2psi.pro.
@@ -4888,6 +5314,16 @@ class EFITTree(Equilibrium):
                 raise ValueError('data retrieval failed.')
         return self._IpMeas.copy()
 
+    def getIpCalc(self):
+        if self._IpCalc is None:
+            try:
+                IpCalcNode = self._MDSTree.getNode(self._root+self._afile+':cpasma')
+                self._IpCalc = IpCalcNode.data()
+                self._defaultUnits['_IpCalc'] = str(IpCalcNode.units)
+            except:
+                raise ValueError('data retrieval failed.')
+        return self._IpCalc.copy()
+
     def getF(self):
         """returns F=RB_{\Phi}(\Psi), often calculated for grad-shafranov 
         solutions.
@@ -4911,6 +5347,16 @@ class EFITTree(Equilibrium):
                 raise ValueError('data retrieval failed.')
         return self._fpol.copy()
 
+    def getFFprime(self):
+        if self._ffprim is None:
+            try:
+                ffNode = self._MDSTree.getNode(self._root+self._gfile+':ffprim')
+                self._ffprim = ffNode.data()
+                self._defaultUnits['_ffprim'] = str(ffNode.units)
+            except:
+                raise ValueError('data retrieval failed.')
+        return self._ffprim.copy()
+
     def getBtVac(self):
         """Returns vacuum toroidal field on-axis.
 
@@ -4928,6 +5374,184 @@ class EFITTree(Equilibrium):
             except:
                 raise ValueError('data retrieval failed.')
         return self._btaxv.copy()
+
+    def getBtPlas(self):
+        """Returns plasma toroidal field on-axis.
+
+        Returns:
+            BtPlas (Array): [nt] array of plasma toroidal field.
+
+        Raises:
+            ValueError: if module cannot retrieve data from MDS tree.
+        """
+        if self._btaxp is None:
+            try:
+                btaxpNode = self._MDSTree.getNode(self._root+self._afile+':btaxp')
+                self._btaxp = btaxpNode.data()
+                self._defaultUnits['_btaxp'] = str(btaxpNode.units)
+            except:
+                raise ValueError('data retrieval failed.')
+        return self._btaxp.copy()
+
+    def getPres(self):
+        if self._fluxPres is None:
+            try:
+                presNode = self._MDSTree.getNode(self._root+self._gfile+':pres')
+                self._fluxPres = presNode.data()
+                self._defaultUnits['_fluxPres'] = str(presNode.units)
+            except:
+                raise ValueError('data retrieval failed.')
+        return self._fluxPres.copy()
+
+    def getPprime(self):
+        if self._pprime is None:
+            try:
+                ppNode = self._MDSTree.getNode(self._root+self._gfile+':ffprim')
+                self._pprime = ppNode.data()
+                self._defaultUnits['_pprime'] = str(ppNode.units)
+            except:
+                raise ValueError('data retrieval failed.')
+        return self._pprime.copy()
+
+    def getBoundaryN(self):
+        if self._nLCFS is None:
+            try:
+                nlcfsNode = self._MDSTree.getNode(self._root+self._gfile+':nbbbs')
+                self._nLCFS = nlcfsNode.data()
+                self._defaultUnits['_nLCFS'] = str(nlcfsNode.units)
+            except:
+                raise ValueError('data retrieval failed.')
+        return self._nLCFS.copy()
+
+    def getBoundaryR(self):
+        if self._RLCFS is None:
+            try:
+                rlcfsNode = self._MDSTree.getNode(self._root+self._gfile+':rbbbs')
+                self._RLCFS = rlcfsNode.data()
+                self._defaultUnits['_RLCFS'] = str(rlcfsNode.units)
+            except:
+                raise ValueError('data retrieval failed.')
+        return self._RLCFS.copy()
+
+    def getBoundaryZ(self):
+        if self._ZLCFS is None:
+            try:
+                zlcfsNode = self._MDSTree.getNode(self._root+self._gfile+':zbbbs')
+                self._ZLCFS = zlcfsNode.data()
+                self._defaultUnits['_ZLCFS'] = str(zlcfsNode.units)
+            except:
+                raise ValueError('data retrieval failed.')
+        return self._ZLCFS.copy()
+
+    def getWallN(self):
+        if self._nLimiter is None:
+            try:
+                nlimNode = self._MDSTree.getNode(self._root+self._gfile+':limitr')
+                self._nLimiter = nlimNode.data()
+                self._defaultUnits['_nLimiter'] = str(nlimNode.units)
+            except:
+                raise ValueError('data retrieval failed.')
+        return self._nLimiter.copy()
+
+    def getWallR(self):
+        if self._Rlimiter is None:
+            try:
+                rlimNode = self._MDSTree.getNode(self._root+self._gfile+':xlim')
+                self._Rlimiter = rlimNode.data()
+                self._defaultUnits['_Rlimiter'] = str(rlimNode.units)
+            except:
+                raise ValueError('data retrieval failed.')
+        return self._Rlimiter.copy()
+
+    def getWallZ(self):
+        if self._Zlimiter is None:
+            try:
+                zlimNode = self._MDSTree.getNode(self._root+self._gfile+':ylim')
+                self._Zlimiter = zlimNode.data()
+                self._defaultUnits['_Zlimiter'] = str(zlimNode.units)
+            except:
+                raise ValueError('data retrieval failed.')
+        return self._Zlimiter.copy()
+
+    def getBPolAverage(self):
+        if self._bpolav is None:
+            try:
+                bpolavNode = self._MDSTree.getNode(self._root+self._afile+':bpolav')
+                self._bpolav = bpolavNode.data()
+                self._defaultUnits['_bpolav'] = str(bpolavNode.units)
+            except:
+                raise ValueError('data retrieval failed.')
+        return self._bpolav.copy()
+
+    def getSafetyFactor95(self):
+        if self._q95 is None:
+            try:
+                q95Node = self._MDSTree.getNode(self._root+self._afile+':q95')
+                self._q95 = q95Node.data()
+                self._defaultUnits['_q95'] = str(q95Node.units)
+            except:
+                raise ValueError('data retrieval failed.')
+        return self._q95.copy()
+
+    def getLiMHD(self):
+        if self._Li is None:
+            try:
+                liNode = self._MDSTree.getNode(self._root+self._afile+':li')
+                self._Li = liNode.data()
+                self._defaultUnits['_Li'] = str(liNode.units)
+            except:
+                raise ValueError('data retrieval failed.')
+        return self._Li.copy()
+
+    def getBetaTorMHD(self):
+        if self._betat is None:
+            try:
+                betatNode = self._MDSTree.getNode(self._root+self._afile+':betat')
+                self._betat = betatNode.data()
+                self._defaultUnits['_betat'] = str(betatNode.units)
+            except:
+                raise ValueError('data retrieval failed.')
+        return self._betat.copy()
+
+    def getBetaPolMHD(self):
+        if self._betap is None:
+            try:
+                betapNode = self._MDSTree.getNode(self._root+self._afile+':betap')
+                self._betap = betapNode.data()
+                self._defaultUnits['_betap'] = str(betapNode.units)
+            except:
+                raise ValueError('data retrieval failed.')
+        return self._betap.copy()
+
+    def getStoredEnergyMHD(self):
+        if self._WMHD is None:
+            try:
+                wNode = self._MDSTree.getNode(self._root+self._afile+':wplasm')
+                self._WMHD = wNode.data()
+                self._defaultUnits['_WMHD'] = str(wNode.units)
+            except:
+                raise ValueError('data retrieval failed.')
+        return self._q95.copy()
+
+    def getStoredEnergyDotMHD(self):
+        if self._Wpdot is None:
+            try:
+                wdNode = self._MDSTree.getNode(self._root+self._afile+':wpdot')
+                self._Wpdot = wdNode.data()
+                self._defaultUnits['_Wpdot'] = str(wdNode.units)
+            except:
+                raise ValueError('data retrieval failed.')
+        return self._Wpdot.copy()
+
+    def getEnergyConfinementTimeMHD(self):
+        if self._tauMHD is None:
+            try:
+                tauNode = self._MDSTree.getNode(self._root+self._afile+':taumhd')
+                self._tauMHD = tauNode.data()
+                self._defaultUnits['_tauMHD'] = str(tauNode.units)
+            except:
+                raise ValueError('data retrieval failed.')
+        return self._tauMHD.copy()
 
 
 class CModEFITTree(EFITTree):
@@ -4985,15 +5609,18 @@ class CModEFITTree(EFITTree):
             window finding is used. If True, the timebase must be monotonically
             increasing. Default is False (use slower, safer method).
     """
-    def __init__(self, shot, tree='ANALYSIS', length_unit='m', gfile='g_eqdsk', 
-                 afile='a_eqdsk', tspline=False, monotonic=True):
-        if tree.upper() == 'ANALYSIS':
-            root = '\\analysis::top.efit.results.'
+    def __init__(self, shot, tree='CMOD', base='ANALYSIS', length_unit='m', gfile='g_eqdsk',
+                 afile='a_eqdsk', fitout='fitout', tspline=False, monotonic=True):
+        if base.upper() == 'ANALYSIS':
+            #root = '\\analysis::top.efit.results.'
+            root = r'\cmod::top.mhd.analysis.efit.results.'
         else:
-            root = '\\'+tree+'::top.results.'
+            #root = '\\'+tree+'::top.results.'
+            #root = '\\'
+            root = r'\cmod::top.mhd.efit_runs.' + f'{base.lower()}' + '.results.'
 
         super(CModEFITTree, self).__init__(shot, tree, root, 
-              length_unit=length_unit, gfile=gfile, afile=afile, 
+              length_unit=length_unit, gfile=gfile, afile=afile, fitout=fitout,
               tspline=tspline, monotonic=monotonic)
         
         self.getFluxVol() #getFluxVol is called due to wide use on C-Mod
@@ -5013,7 +5640,8 @@ class CModEFITTree(EFITTree):
         """
         if self._fluxVol is None:
             try:
-                fluxVolNode = self._MDSTree.getNode(self._root+'fitout:volp')
+                #fluxVolNode = self._MDSTree.getNode(self._root+'fitout:volp')
+                fluxVolNode = self._MDSTree.getNode(self._root+self._fitout+':volp')
                 self._fluxVol = fluxVolNode.data()
                 # Units aren't properly stored in the tree for this one!
                 if fluxVolNode.units != ' ':
@@ -5068,3 +5696,106 @@ class UnivariateInterpolator(scipy.interpolate.InterpolatedUnivariateSpline):
             if self.max_val is None:
                 self.max_val = max(args[1])
         super(UnivariateInterpolator, self).__init__(*args, **kwargs)
+
+class RectBivariateSpline(scipy.interpolate.RectBivariateSpline):
+    """the lack of a graceful bounds error causes the fortran to fail hard.
+    This masks scipy.interpolate.RectBivariateSpline with a proper bound
+    checker and value filler such that it will not fail in use for EqTools
+
+    Can be used for both smoothing and interpolating data.
+
+    Args:
+        x (1-dimensional float array):
+            1-D array of coordinates in monotonically increasing order.
+        y (1-dimensional float array):
+            1-D array of coordinates in monotonically increasing order.
+        z (2-dimensional float array):
+            2-D array of data with shape (x.size,y.size).
+
+    Keyword Args:
+        bbox (1-dimensional float): Sequence of length 4 specifying the
+            boundary of the rectangular approximation domain.  By default,
+            ``bbox=[min(x,tx),max(x,tx), min(y,ty),max(y,ty)]``.
+        kx (integer): Degrees of the bivariate spline. Default is 3.
+        ky (integer): Degrees of the bivariate spline. Default is 3.
+        s (float): Positive smoothing factor defined for estimation condition,
+            ``sum((w[i]*(z[i]-s(x[i], y[i])))**2, axis=0) <= s``
+            Default is ``s=0``, which is for interpolation.
+    """
+
+    def __init__(
+        self, x, y, z, bbox=[None] * 4, kx=3, ky=3, s=0, bounds_error=True,
+        fill_value=np.nan
+    ):
+
+        super(RectBivariateSpline, self).__init__(
+            x, y, z, bbox=bbox, kx=kx, ky=ky, s=s
+        )
+        self._xlim = np.array((x.min(), x.max()))
+        self._ylim = np.array((y.min(), y.max()))
+        self.bounds_error = bounds_error
+        self.fill_value = fill_value
+
+    def _check_bounds(self, x_new, y_new):
+        """Check the inputs for being in the bounds of the interpolated data.
+
+        Args:
+            x_new (float array):
+
+            y_new (float array):
+
+        Returns:
+            out_of_bounds (Boolean array): The mask on x_new and y_new of
+            values that are NOT of bounds.
+        """
+        below_bounds_x = x_new < self._xlim[0]
+        above_bounds_x = x_new > self._xlim[1]
+
+        below_bounds_y = y_new < self._ylim[0]
+        above_bounds_y = y_new > self._ylim[1]
+
+        # !! Could provide more information about which values are out of bounds
+        if self.bounds_error and below_bounds_x.any():
+            raise ValueError(
+                "A value in x is below the interpolation range."
+            )
+        if self.bounds_error and above_bounds_x.any():
+            raise ValueError(
+                "A value in x is above the interpolation range."
+            )
+        if self.bounds_error and below_bounds_y.any():
+            raise ValueError(
+                "A value in y is below the interpolation range."
+            )
+        if self.bounds_error and above_bounds_y.any():
+            raise ValueError(
+                "A value in y is above the interpolation range."
+            )
+
+        out_of_bounds = np.logical_not(
+            np.logical_or(
+                np.logical_or(below_bounds_x, above_bounds_x),
+                np.logical_or(below_bounds_y, above_bounds_y)
+            )
+        )
+        return out_of_bounds
+
+    def ev(self, xi, yi):
+        """Evaluate the rectBiVariateSpline at (xi,yi).  (x,y)values are
+           checked for being in the bounds of the interpolated data.
+
+        Args:
+            xi (float array): input x dimensional values
+            yi (float array): input x dimensional values
+
+        Returns:
+            val (float array): evaluated spline at points (x[i], y[i]), i=0,...,len(x)-1
+        """
+        idx = self._check_bounds(xi, yi)
+        # print(idx)
+        zi = self.fill_value * np.ones(xi.shape)
+        zi[idx] = super(RectBivariateSpline, self).ev(
+            np.atleast_1d(xi)[idx], np.atleast_1d(yi)[idx]
+        )
+        return zi
+
